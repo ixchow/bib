@@ -1,4 +1,4 @@
-import * as bib from './bib.mjs';
+import * as bib from './bib.js';
 
 //note: https://maverick.inria.fr/~Xavier.Decoret/resources/xdkbibtex/bibtex_summary.html
 

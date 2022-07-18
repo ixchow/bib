@@ -1,5 +1,5 @@
 //parse bst file:
-import * as fs from 'fs';
+const fs = require('fs');
 
 //Based on "Taming the BeaST":
 // https://mirrors.concertpass.com/tex-archive/info/bibtex/tamethebeast/ttb_en.pdf
@@ -8,12 +8,12 @@ import * as fs from 'fs';
 
 const VERBOSE = false;
 
-export function parseFile(filename) {
+function parseFile(filename) {
 	const data = fs.readFileSync(filename, {encoding:'utf8'});
 	return parse(data);
 }
 
-export function parse(data) {
+function parse(data) {
 	if (VERBOSE) console.log(" ---- parsing starts ---- ");
 
 	/*
@@ -145,7 +145,7 @@ export function parse(data) {
 
 
 //Clean up TeX-like value (ad-hoc):
-export function unTeXValue(value) {
+function unTeXValue(value) {
 	let clean = value;
 	//strip quotes:
 	if (clean[0] === '"' && clean[clean.length-1] === '"') clean = clean.substr(1, clean.length-2);
@@ -157,3 +157,9 @@ export function unTeXValue(value) {
 	clean = clean.replace(/[{}]/g,'');
 	return clean;
 }
+
+module.exports = {
+	parseFile,
+	parse,
+	unTeXValue
+};
