@@ -1,0 +1,5 @@
+{ "name":"bib"
+, "version":"0.1"
+, "description":"Functions to load and parse BibTeX database (.bib) files."
+, "main":"bib.mjs"
+}
