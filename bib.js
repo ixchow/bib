@@ -46,6 +46,8 @@ function parse(data) {
 
 	const entries = {};
 
+	const strings = {};
+
 	let pos = 0;
 
 	function skipWhitespace() {
@@ -94,6 +96,12 @@ function parse(data) {
 		} else if (/[0-9]/.test(data[pos])) {
 			//numeric field
 			return readUntil(/[^0-9]/, "numeric field value");
+		} else if (/[a-zA-Z]/.test(data[pos])) {
+			//strings field
+			//TODO: '#' as string joiner
+			const string = readUntil(/[\s#"@%'(),={}]/, "string name").toLowerCase();
+			if (!(string in strings)) throw new Error(`String '${string}' is undefined.`);
+			return strings[string];
 		} else {
 			throw new Error(`Expecting field value, but first character was '${data[pos]}'.`);
 		}
@@ -111,6 +119,19 @@ function parse(data) {
 		pos += 1;
 
 		//TODO: deal with @comment
+
+		//deal with @string:
+		if (type.toLowerCase() === "@string") {
+			skipWhitespace();
+			const key = readUntil(/[\s{}()",]/, "string key").toLowerCase();
+			skipWhitespace();
+			if (data[pos] !== '=') throw new Error("String must have '=' after name.");
+			pos += 1;
+			skipWhitespace();
+			const value = readFieldValue();
+			strings[key] = value;
+			continue;
+		}
 
 		//read entry key:
 		skipWhitespace();
@@ -137,7 +158,7 @@ function parse(data) {
 
 		if (data[pos] !== close) throw new Error(`Entry didn't end with ${close}.`);
 
-		entries[key] = {type:type, fields:fields};
+		entries[key] = {key:key, type:type, fields:fields};
 	}
 
 	return entries;
@@ -158,8 +179,64 @@ function unTeXValue(value) {
 	return clean;
 }
 
+//Split 'authors' value into list of objects with {First, von, Last, Jr}
+function splitAuthors(value) {
+	//strip surrounding '{' or '"':
+	if ( (value[0] === '"' && value[value.length-1] === '"')
+	  || (value[0] === '{' && value[value.length-1] === '}') ) {
+		value = value.substr(1, value.length-2);
+	}
+
+	//NOTE: I suspect that a brace-depth>0 'and' would not be a split, nor would a ','
+
+	const authors = [];
+	for (const author of value.split(/\s+and\s+/)) {
+		const chunks = author.split(/\s*,\s*/);
+		if (chunks.length === 1) {
+			const words = chunks[0].split(/\s+/);
+			let vonBegin = words.length-1;
+			let vonEnd = words.length-1;
+			for (let i = 0; i + 1 < words.length; ++i) {
+				//really should be "first character at depth 0 or first special character at any depth"
+				if (/[a-z]/.test(words[i][0])) {
+					vonBegin = Math.min(vonBegin, i);
+					vonEnd = i+1;
+				}
+			}
+			authors.push({
+				First:words.slice(0,vonBegin).join(''),
+				von:words.slice(vonBegin,vonEnd).join(''),
+				Last:words.slice(vonEnd,words.length).join(''),
+				Jr:''
+			});
+		} else if (chunks.length === 2 || chunks.length === 3) {
+			const words = chunks[0].split(/\s+/);
+			let vonBegin = 0;
+			let vonEnd = 0;
+			for (let i = 0; i + 1 < words.length; ++i) {
+				//really should be "first character at depth 0 or first special character at any depth"
+				if (/[a-z]/.test(words[i][0])) {
+					vonBegin = Math.min(vonBegin, i);
+					vonEnd = i+1;
+				}
+			}
+			authors.push({
+				First:(chunks.length === 3 ? chunks[2] : chunks[1]),
+				von:words.slice(vonBegin,vonEnd).join(''),
+				Last:words.slice(vonEnd,words.length).join(''),
+				Jr:(chunks.length === 3 ? chunks[1] : '')
+			});
+		} else {
+			throw new Error(`Authors with more than two commas: "${value}"`)
+		}
+	}
+
+	return authors;
+}
+
 module.exports = {
 	parseFile,
 	parse,
-	unTeXValue
+	unTeXValue,
+	splitAuthors
 };

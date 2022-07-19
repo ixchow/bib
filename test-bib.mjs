@@ -31,3 +31,13 @@ for (const key in got2) {
 		console.log(`  ${field}: "${bib.unTeXValue(value)}"`);
 	}
 }
+
+[
+"McCann, Jim",
+"McCann, Jim and Otherauthor, Fake",
+"First Last and Last, First",
+"First von Last and von Last, First",
+"Last, Jr, First and von Last, Jr, First",
+].forEach( (author) => {
+	console.log(bib.splitAuthors(author));
+});
