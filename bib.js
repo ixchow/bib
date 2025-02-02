@@ -223,7 +223,7 @@ function splitAuthors(value) {
 			authors.push({
 				First:(chunks.length === 3 ? chunks[2] : chunks[1]),
 				von:words.slice(vonBegin,vonEnd).join(''),
-				Last:words.slice(vonEnd,words.length).join(''),
+				Last:words.slice(vonEnd,words.length).join(' '),
 				Jr:(chunks.length === 3 ? chunks[1] : '')
 			});
 		} else {
