@@ -107,6 +107,8 @@ function parse(data) {
 		}
 	}
 
+	let index = 0;
+
 	while (pos < data.length) {
 		//skip until an '@' sign (start of entry):
 		while (pos < data.length && data[pos] !== '@') pos += 1;
@@ -158,7 +160,9 @@ function parse(data) {
 
 		if (data[pos] !== close) throw new Error(`Entry didn't end with ${close}.`);
 
-		entries[key] = {key:key, type:type, fields:fields};
+		entries[key] = {key, type, fields, index};
+
+		index += 1;
 	}
 
 	return entries;
